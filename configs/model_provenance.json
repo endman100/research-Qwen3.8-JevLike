@@ -1,0 +1,95 @@
+{
+  "model": "unsloth/Qwen3.8-27B-NVFP4",
+  "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+  "basis": "Recovered local HF download metadata dated before benchmarks; SHA1 small-file etags checked. Full weight SHA256 not rehashed during publication.",
+  "files": {
+    ".gitattributes": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "download_timestamp": 1789843902.0766706,
+      "bytes_now": 1570,
+      "git_blob_matches_etag": true
+    },
+    "config.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "b6f6347774036d406eabed6cfffb0fec424ba075",
+      "download_timestamp": 1789843902.0910835,
+      "bytes_now": 22564,
+      "git_blob_matches_etag": true
+    },
+    "README.md": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "3ddbfc9c1f10c6c82edbcb04a0edfde3f830b6f4",
+      "download_timestamp": 1789843902.1091213,
+      "bytes_now": 6746,
+      "git_blob_matches_etag": true
+    },
+    "model.safetensors.index.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "7608ff001dbfc8936318df32aaaaef7c8c9f340d",
+      "download_timestamp": 1789843902.1352224,
+      "bytes_now": 164371,
+      "git_blob_matches_etag": true
+    },
+    "chat_template.jinja": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "a087700658910c336c9ca9f5780a75a3cdd4fcdd",
+      "download_timestamp": 1789843902.1711602,
+      "bytes_now": 9993,
+      "git_blob_matches_etag": true
+    },
+    "generation_config.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "0bc3addd19dc59c5c8899fc1fb887d50b592e7c3",
+      "download_timestamp": 1789843902.1763155,
+      "bytes_now": 214,
+      "git_blob_matches_etag": true
+    },
+    "tokenizer_config.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "088fbebf189b39e2dabcdb12a83a31617fe98c2e",
+      "download_timestamp": 1789843948.3035116,
+      "bytes_now": 1047,
+      "git_blob_matches_etag": true
+    },
+    "video_preprocessor_config.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe",
+      "download_timestamp": 1789843952.4591017,
+      "bytes_now": 385,
+      "git_blob_matches_etag": true
+    },
+    "preprocessor_config.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64",
+      "download_timestamp": 1789843952.4837887,
+      "bytes_now": 390,
+      "git_blob_matches_etag": true
+    },
+    "vocab.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "0aa0ce0658d60ac4a5d609f4eadb0e8e43514176",
+      "download_timestamp": 1789843903.1856427,
+      "bytes_now": 6722759,
+      "git_blob_matches_etag": true
+    },
+    "tokenizer.json": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+      "download_timestamp": 1789843948.0213933,
+      "bytes_now": 19989325
+    },
+    "model_mtp.safetensors": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "1d8268aa85ace093a561e3e7b63b9d390dac1cd55a90cd55b5ec509c3c9da9fe",
+      "download_timestamp": 1789843972.3682685,
+      "bytes_now": 849400392
+    },
+    "model.safetensors": {
+      "revision": "f0b7c9e722f5565102fff8481c99e4d86ae099c7",
+      "etag": "c473512c70eace07e2256fe9fd76596ac03e3295bee7d54cfb72676416afcc05",
+      "download_timestamp": 1789844350.0987113,
+      "bytes_now": 22568192096
+    }
+  }
+}

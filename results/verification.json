@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "checked_utc": "2026-09-21T01:18:00.240708+00:00",
+  "formal_API_responses": 2160,
+  "binary_probability_pairs": 2130,
+  "complete_71_key_dicts": 40,
+  "latency_observations": 40,
+  "raw_evidence_entries_hashed": 143,
+  "high_concurrency_each_round": [
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71,
+    71
+  ],
+  "ideal_s_without_monitor": 0.9454875906952328,
+  "ideal_s_with_monitor": 0.9506234806927057,
+  "A_vs_B4_differences": 6,
+  "B4_vs_B71_differences": 3,
+  "new_inference_run": false,
+  "scope": "Recorded data integrity, arithmetic and privacy; not accuracy labels, performance rerun, or authenticity of model weight bytes."
+}
