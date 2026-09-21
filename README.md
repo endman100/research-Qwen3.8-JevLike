@@ -1,7 +1,16 @@
 # Qwen3.8 Jev-like：71 類二元分類
 
-同一份 Qwen3.8-27B-NVFP4，比較「生成完整 JSON」與「71 個獨立 true/false 判斷」。
-**輸出都是完整 71-key bool dict；更快，但答案不完全相同。不是 Jev／RLCD 訓練或 Tree Parallel 復現。**
+## 前提
+
+本實驗起點是 HF [harshatheg/Qwen-2.5-1B-RLCD](https://huggingface.co/harshatheg/Qwen-2.5-1B-RLCD) 的 **Parallel Constrained Decoding**，另參考其 [Transformers 版本](https://huggingface.co/shreyansh26/Qwen-2.5-1B-RLCD)：
+對有限選項欄位共用前綴、平行判斷，減少逐 token 生成完整 JSON 的工作。71 類各自回答 `true/false`，可同時成立，適合用來檢驗這個思路。
+
+## 實驗目標
+
+**嘗試將上述 HF repo 的方法思路套用到 Qwen3.8-27B-NVFP4＋vLLM，確認相較直接 Structured Output 是否更快、快多少。**
+固定同一模型、任務與 71 類定義，各組測 10 次；比較取得完整 71-key bool dict 的總耗時與答案差異，並以分段計時分析瓶頸。
+
+本次以 vLLM prefix caching＋批次請求實作其核心思路，未直接移植原 repo 的引擎或 Tree Parallel，亦未進行 Jev／RLCD 訓練；不預設能重現原作者的加速倍率。
 
 ## 結果
 
