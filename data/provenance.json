@@ -1,9 +1,0 @@
-{
-  "repository": "https://github.com/endman100/skill-router-nexus",
-  "checked_base_commit": "b3523bec95b03f0f0999bfbe07d2004120ce2a15",
-  "worktree_modified": true,
-  "benchmark_snapshot_equals_current_text": true,
-  "original_router_snapshot_sha256": "8f551f07bf3c9059ac6fcb964b3a959e3be9bf06f28ad547cacfd52d995627ce",
-  "taxonomy_sha256": "aaf072338678c4bf87d83b2f227ba2a15633b490cc41cbdf4a9e48f734cacb72",
-  "scope": "71 category descriptions only; the modified worktree snapshot, not the clean base commit, is the benchmark input."
-}

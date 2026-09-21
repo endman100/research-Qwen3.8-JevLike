@@ -1,82 +1,86 @@
-# research-Qwen3.8-JevLike
+# Qwen3.8 Jev-like：71 類二元分類
 
-**用同一個 Qwen3.8-27B-NVFP4，把完整 JSON 生成改成 71 個獨立 `true/false` 判斷。**
-RTX 5090 32GB／vLLM 0.29.0；一個固定 Skill Router 任務，各配置重複 10 次。
-這是 Jev-like 推論實驗，**不是 Jev、RLCD 訓練或 Tree Parallel 的復現**。
+同一份 Qwen3.8-27B-NVFP4，比較「生成完整 JSON」與「71 個獨立 true/false 判斷」。
+**輸出都是完整 71-key bool dict；更快，但答案不完全相同。不是 Jev／RLCD 訓練或 Tree Parallel 復現。**
 
 ## 結果
 
-| 方法 | Context／client workers／server sequences | 計時範圍 | 中位耗時 |
+RTX 5090 32GB、Windows 11／WSL2、vLLM 0.29.0。**同一個任務，各組 10 次**，不是 10 種任務。
+
+| 方法 | Context／client workers／server sequences | 計時條件 | 中位數 |
 |---|---|---|---:|
-| A：完整 JSON Schema | 32K／1／4 | 熱前綴，完整 71-key JSON | **46.589 s** |
-| B：71 個二元判斷 | 32K／4／4 | 熱前綴，完整 71-key dict | **4.398 s** |
-| B：四路分段 | 32K／4／4 | 冷前綴＋71 類＋組裝 | **5.040 s** |
-| B：高並行分段 | 6K／71／71 | 冷前綴＋71 類＋組裝 | **3.465 s** |
+| A：JSON Schema | 32K／1／4 | 熱前綴 | 46.589 s |
+| B：二元分類 | 32K／4／4 | 熱前綴 | 4.398 s |
+| B：四路分段 | 32K／4／4 | 冷前綴＋分類＋組裝 | 5.040 s |
+| B：71 路分段 | 6K／71／71 | 冷前綴＋分類＋組裝 | **3.465 s** |
 
-A/B 熱前綴：**10.59× 更快，但每輪 6 類答案不同**。
-高並行 vs 四路分段：**1.45× 更快，但每輪 3 類翻轉**；這是歷史組間比較，不能單獨歸因於 context。
+A/B 熱前綴快 **10.59×**，每輪 **6 類答案不同**。71 路比四路分段快 **1.45×**，另有 **3 類翻轉**。
+後兩組在不同時段測量、同時改動 context 與並行度，不能單獨歸因於某個參數。
+沒有人工標註；一致率不等於正確率，機率未校準。
 
-**結論：省掉大量 JSON token 可降低延遲，尚非同品質／無損加速。**
-沒有人工標註；一致率不是正確率，模型機率未校準。
-[全部 10 次數據與差異](docs/RESULTS.md) · [原始回覆封存](results/records.zip)
+<details>
+<summary>全部 10 次總耗時（秒）</summary>
 
-## 方法
+| 次數 | A 熱前綴 | B 四路熱前綴 | B 四路冷分段 | B 71 路冷分段 |
+|---:|---:|---:|---:|---:|
+| 1 | 46.212 | 4.640 | 5.311 | 3.457 |
+| 2 | 47.421 | 3.979 | 4.991 | 3.454 |
+| 3 | 46.492 | 4.285 | 5.109 | 3.516 |
+| 4 | 47.272 | 4.613 | 4.810 | 3.462 |
+| 5 | 45.242 | 4.736 | 5.158 | 3.544 |
+| 6 | 47.027 | 4.122 | 5.058 | 3.508 |
+| 7 | 46.685 | 3.995 | 4.767 | 3.460 |
+| 8 | 45.767 | 4.511 | 5.402 | 3.455 |
+| 9 | 45.273 | 4.580 | 4.797 | 3.488 |
+| 10 | 46.801 | 4.043 | 5.022 | 3.468 |
 
-```text
-A：需求＋71 類定義 → JSON Schema 逐 token 生成 → 完整 bool dict
-B：共享前綴快取 → 71 個 true/false 首 token 判斷 → 程式組裝相同 dict
-```
+</details>
 
-B 每類 `max_tokens=1`、`enable_thinking=false`。`true/false` 各一個 token（1802／3721）；
-從兩候選 logprobs 計算 `P(true)`，以 **0.5** 判定 bool。保留所有 71 keys，包括 `false`。
-71 個 `P(true)` 不必加總為 1。71 個並行 HTTP 也不代表 71 個 GPU 分支一次完成。
+## 方法與理論值
 
-最新平均：前綴 **0.704s**、71 類 **2.771s**、組裝 **0.649ms**；另有約 5ms 中途量測開銷。
-單 token 的 `decode=0` 是首 token 後没有後續生成，不代表零運算。[方法與設定](docs/METHOD.md)
+A 逐 token 寫 JSON；B 重用共同前綴，每類只生成 **1 token**（`true=1802`／`false=3721`），再組成 dict。
+兩者均關閉 thinking、temperature=0。B 將兩候選 logprobs 正規化得到 P(true)，以 **0.5** 判定。
 
-## 完全平行的理想估算（非實測）
+分段測試每輪使用新 cache salt：冷前綴 → 71 類 → 組裝，暖機不計。前綴請求多產生一個丟棄 token，
+並非純 GPU prefill。總時間包含 HTTP、排隊與中途讀取指標，不包含載入模型及存檔。
+最新平均：**0.704 s 前綴＋2.771 s 分類＋0.000649 s 組裝**，另約 0.005 s 指標開銷。
 
-`T = T_prefix + max(T₁ … T₇₁) + T_assembly`
-
-假設全部分支同時執行，且每類仍維持四路測試平均 240.6ms、沒有新增資源競爭：
-`0.7042 + 0.2406 + 0.000649 ≈ 0.9455s`，加量測開銷約 **0.95s**。
-這以平均值代替未知的最慢分支，是樂觀情境，**不是 5090 的理論下限或速度保證**。
-[公式、資料依據與限制](docs/THEORY.md)
+**完全平行的理想情境：** `T = T_prefix + max(T₁…T₇₁) + T_assembly`。
+假設 71 類都能維持舊四路平均 0.2406 s、完全重疊且無資源競爭：
+`0.7042 + 0.2406 + 0.000649 ≈ 0.9455 s`，含量測開銷約 **0.95 s**。
+這以平均代替未知的最慢分支，**不是實測或硬體下限**。71 個 HTTP 並行也不等於一次 GPU forward。
 
 ## 重現
 
-Linux／WSL2、Python 3.12、相容 NVIDIA 驅動。使用獨立環境，不與其他模型同時搶用 GPU：
+僅保留四個檔案：[程式](benchmark.py)、[固定輸入與設定](experiment.json)、[40 次數據與各類結果](results.json)、本頁。
+輸入約 5K tokens，6K 可完整容納。固定 NVFP4／FP8 KV、Triton、eager、batch token budget=2048；
+模型 revision 已固定。需要相容 NVIDIA GPU／驅動、Linux 或 WSL2、Python 3.12。
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt -r requirements-server.txt
-bash scripts/serve.sh 6k71
+pip install vllm==0.29.0 torch==2.13.0 httpx==0.28.1 jsonschema==4.25.1
+python benchmark.py --serve 6k71
 ```
 
-另一個終端啟用相同環境：
+另一終端啟用相同環境，執行：
 
 ```bash
-python scripts/benchmark.py --profile 6k71 --protocol segmented --out runs/6k71
-python scripts/verify_results.py   # 只驗證收錄的歷史結果，不跑 GPU
+python benchmark.py --profile 6k71 --out runs/6k71.json
+python benchmark.py --verify  # 離線核對收錄結果，不跑 GPU
 ```
 
-四路分段用 `serve.sh 32k4` 與 `--profile 32k4 --protocol segmented`；
-A/B 對照用 `serve.sh 32k4` 與 `--profile 32k4 --protocol paired`。每次使用新的輸出目錄。
-腳本會檢查模型版本、完整 token 長度與前綴，不截斷輸入或自動重試推論。
+四路分段：先停止舊服務，再 `--serve 32k4`，測試用 `--profile 32k4`。
+A/B：同一 32k4 服務，測試加 `--protocol paired`。預設各 10 次，每次指定新的 `--out`。
+程式檢查版本、分詞與前綴，不截斷或自動重試推論。已有權重可用環境變數 `MODEL_PATH` 指向相同版本。
 
-啟動器固定從下載 metadata 恢復的模型 revision；`historical/` 保存實際量測程式原檔，
-公開 wrapper 只做分詞預檢並在新目錄執行它們。**本次整理未重新跑 GPU**。
-完整歷史依賴 lock 未保留，不保證位元級重現。[變更與更正](docs/CHANGES.md)
+本程式為精簡重構，未重新跑 GPU；完整歷史依賴 lock 未保留，不保證位元級重現。
+[原始程式與證據封存](https://github.com/endman100/research-Qwen3.8-JevLike/tree/6e2747a078d9e8d00861d218c49bbb6c140423d2)保留在 Git 歷史，原始數據未變更。
 
-## 資料與參考
+## 來源
 
-資料：**[endman100/skill-router-nexus](https://github.com/endman100/skill-router-nexus)** 的 71 類工作目錄快照，
-加一則固定中文需求；不是 Jev 或 HF repo 的 presets。
-實驗時 `Writing-Craft` 描述有未提交修改，故以本 repo 的 [taxonomy](data/taxonomy.json) 與 [patch](data/router_worktree.patch) 為準。
+**資料：** [skill-router-nexus](https://github.com/endman100/skill-router-nexus) 的 71 類快照＋一則自建需求，均在 `experiment.json`。
+快照包含未提交的 Writing-Craft 描述修改，以收錄內容為準，不是 Jev 的測試集。
 
-方法：[Jev／TypeSafe](https://typesafe.ai/blog/introducing-system-one-models-and-jev)、
-[MLX Parallel Constrained Decoding](https://huggingface.co/harshatheg/Qwen-2.5-1B-RLCD)、
-[Transformers 版本](https://huggingface.co/shreyansh26/Qwen-2.5-1B-RLCD)。
-模型：[Unsloth NVFP4](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4)；引擎：[vLLM](https://github.com/vllm-project/vllm)。
-[來源與版本](docs/SOURCES.md) · [完整驗證](results/verification.json)
+**方法參考：** [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) · [MLX 版本](https://huggingface.co/harshatheg/Qwen-2.5-1B-RLCD) · [Transformers 版本](https://huggingface.co/shreyansh26/Qwen-2.5-1B-RLCD)。
+**實際執行：** [Unsloth 模型](https://huggingface.co/unsloth/Qwen3.8-27B-NVFP4) · [vLLM](https://github.com/vllm-project/vllm)。
